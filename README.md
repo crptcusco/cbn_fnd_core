@@ -1,23 +1,20 @@
-# CBN-FND Core: Hybrid Systems Dynamics
+# CBN-FND Core: Hybrid Systems Dynamics (v2.0)
 
-This repository is a specialized fork of `cbnetwork`, evolving from a general Boolean Network framework into a biophysical hybrid system core.
+This repository is a specialized framework for studying hybrid dynamics, bridging continuous biophysical models (FitzHugh-Nagumo) with discrete Coupled Boolean Networks (CBN).
 
-## Overview
+## v2.0 New Features
 
-The `cbn_fnd_core` project bridges the gap between continuous biophysical models and discrete logic representations. It integrates the **FitzHugh-Nagumo (FHN)** equations with a **Boolean mapping operator ($\Phi_{\Delta t}$)** to create a robust framework for studying hybrid dynamics.
-
-### Key Components
-
-- **Continuous State (FHN):** Uses the FitzHugh-Nagumo model to simulate neuronal or excitable media dynamics.
-- **Discrete State (CBN):** Represents the system as Coupled Boolean Networks.
-- **The Link ($\Phi_{\Delta t}$):** A mathematical operator that maps continuous signals into discrete pulses, giving biological meaning to boolean transitions.
+- **RK4 Integrator:** High-precision Runge-Kutta 4th order solver for the continuous FND layer.
+- **Spatial Summation ($K$-threshold):** Boolean state updates based on the sum of incoming signals from neighbors, compared against a specific threshold $K_a$ for each entity.
+- **Refractory Period:** Entities enter a refractory state after firing, preventing immediate re-triggering and ensuring biologically plausible dynamics.
+- **M-Entity Architecture:** Support for $m$ coupled entities, each with its own FND unit and set of Boolean variables.
 
 ## Project Structure
 
-- `src/dynamics/`: Core implementation of the hybrid bridge.
-  - `fhn_integrator.py`: Solves the continuous ODEs.
-  - `phi_mapping.py`: Implements the $\Phi_{\Delta t}$ operator.
-- `src/example_hybrid.py`: A minimalist example with 2-3 coupled nodes showing the mapping from continuous to discrete states.
+- `src/dynamics/`: Core implementation.
+  - `fhn_integrator.py`: RK4 solver for the FitzHugh-Nagumo equations.
+  - `simulator.py`: The `HybridSimulator` class that manages the interaction between layers.
+- `src/diamond_case.py`: A demonstration of a 4-entity diamond-shaped network where entity 4 acts as a coincidence detector ($K_4=2$).
 
 ## Getting Started
 
@@ -25,12 +22,22 @@ The `cbn_fnd_core` project bridges the gap between continuous biophysical models
    ```bash
    pip install -r requirements.txt
    ```
-2. Run the hybrid dynamics example:
+2. Run the Diamond Case simulation:
    ```bash
-   PYTHONPATH=src python src/example_hybrid.py
+   PYTHONPATH=src python src/diamond_case.py
    ```
-3. View the results in `hybrid_dynamics_example.png`.
+3. Check the results in `diamond_case_v2.png`.
 
-## Why this approach?
+## Core Logic
 
-By using the $\Phi_{\Delta t}$ operator, we provide a "biological engine" to Boolean Networks, allowing for more realistic simulations of complex systems while maintaining the computational efficiency of discrete models.
+### Continuous Layer (FND)
+The system solves the following ODEs for each entity $a$:
+$$\frac{dv_a}{dt} = v_a - \frac{v_a^3}{3} - w_a + I_{ext} + \sum_{b \in \mathcal{N}_a} A_{ab} v_b(t)$$
+$$\frac{dw_a}{dt} = \tau (v_a + a - b w_a)$$
+
+### Projection Operator ($\Phi_{\Delta t}$)
+Transforms continuous signals into discrete events. A signal $y^b_a(k) = 1$ if unit $b$ fires ($v_b \geq \theta$) within the time window $\Delta t$.
+
+### Discrete Layer (CBN)
+Updates the Boolean state $x_{a,i}$ using the Spatial Summation Rule:
+$$x_{a,i}(k+1) = 1 \iff \left( \sum_{b \in \mathcal{N}_a} y^b_a(k) \geq K_a \right) \text{ AND } \text{Ref}_a(k) = 0$$

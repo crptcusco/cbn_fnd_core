@@ -15,30 +15,29 @@ class TestDynamics(unittest.TestCase):
         t = np.linspace(0, 10, 100)
         initial_state = np.array([0.0, 0.0])
         I = np.array([0.5])
-        sol = integrator.integrate(t, initial_state, I)
+        sol = integrator.integrate_rk4(t, initial_state, I)
         self.assertEqual(sol.shape, (100, 2))
         # Voltage should change from initial 0
         self.assertNotEqual(sol[-1, 0], 0.0)
 
     def test_coupled_fhn(self):
         integrator = FHNIntegrator()
-        t = np.linspace(0, 1, 10)
         # 2 nodes: [v0, v1, w0, w1]
         initial_state = np.array([1.0, 0.0, 0.0, 0.0])
         I = np.array([0.0, 0.0])
-        K = np.array([[0.0, 0.0],
+        A = np.array([[0.0, 0.0],
                       [0.1, 0.0]]) # Node 1 coupled to Node 0
 
-        # Test vectorized equations directly
+        # Test equations directly
         state = initial_state
-        res = integrator.fhn_equations(state, 0, I, K)
+        res = integrator.fhn_equations(state, I, A)
 
         # v0 = 1.0, v1 = 0.0
-        # dv0 = v0 - v0^3/3 - w0 + I0 + coupling0
-        # coupling0 = K[0,0]*(v0-v0) + K[0,1]*(v1-v0) = 0 + 0 = 0
+        # dv0 = v0 - v0^3/3 - w0 + I0 + sum(A_0b * v_b)
+        # sum(A_0b * v_b) = A[0,0]*v0 + A[0,1]*v1 = 0 + 0 = 0
         # dv0 = 1.0 - 1/3 - 0 + 0 + 0 = 0.66666667
 
-        # coupling1 = K[1,0]*(v0-v1) + K[1,1]*(v1-v1) = 0.1*(1.0-0.0) + 0 = 0.1
+        # sum(A_1b * v_b) = A[1,0]*v0 + A[1,1]*v1 = 0.1*1.0 + 0 = 0.1
         # dv1 = v1 - v1^3/3 - w1 + I1 + coupling1 = 0 - 0 - 0 + 0 + 0.1 = 0.1
 
         self.assertAlmostEqual(res[0], 2/3)
