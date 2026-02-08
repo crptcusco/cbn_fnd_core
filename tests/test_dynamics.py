@@ -66,5 +66,28 @@ class TestDynamics(unittest.TestCase):
         self.assertEqual(discrete_long[2], 1)
         self.assertEqual(np.sum(discrete_long), 1)
 
+    def test_spatial_summation_logic(self):
+        # Escenario: m=3 entidades, Entidad 2 depende de 0 y 1 con K=2
+        # Simulamos señales entrantes y_0_2 y y_1_2
+        y_signals = np.array([1, 0, 1]) # Señales de las entidades 0, 1, 2
+        K_thresholds = np.array([1, 1, 2]) # Entidad 2 requiere 2 señales
+
+        # Adyacencia: 0->2 y 1->2
+        adj_matrix = np.array([[0, 0, 0],
+                               [0, 0, 0],
+                               [1, 1, 0]])
+
+        # Lógica de cálculo: Sumatoria de señales de vecinos activos
+        def check_activation(entity_idx, signals, adj, K):
+            neighbors = np.where(adj[entity_idx] == 1)[0]
+            active_signals = np.sum(signals[neighbors])
+            return 1 if active_signals >= K[entity_idx] else 0
+
+        # Test: Con solo una señal (entidad 0 activa), la entidad 2 debe ser 0
+        self.assertEqual(check_activation(2, np.array([1, 0, 0]), adj_matrix, K_thresholds), 0)
+
+        # Test: Con ambas señales (0 y 1 activas), la entidad 2 debe ser 1
+        self.assertEqual(check_activation(2, np.array([1, 1, 0]), adj_matrix, K_thresholds), 1)
+
 if __name__ == '__main__':
     unittest.main()

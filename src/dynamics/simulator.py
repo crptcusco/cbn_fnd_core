@@ -1,6 +1,7 @@
 import numpy as np
 from .fhn_integrator import FHNIntegrator
 from .phi_mapping import PhiMapping
+from .cbn_controller import CBNController
 
 class HybridSimulator:
     """
@@ -19,6 +20,7 @@ class HybridSimulator:
         params = fhn_params if fhn_params else {'a': 0.7, 'b': 0.8, 'tau': 0.08}
         self.integrator = FHNIntegrator(**params)
         self.phi = PhiMapping(threshold=theta)
+        self.cbn = CBNController(m, n, K_thresholds, adjacency_A)
 
         # Initial state
         self.v = np.full(m, -1.0)
@@ -29,6 +31,7 @@ class HybridSimulator:
         self.history_v = []
         self.history_x = []
         self.history_t = []
+        self.attractor = None
 
     def run(self, total_time, dt_integration, I_ext):
         """
@@ -55,27 +58,28 @@ class HybridSimulator:
             self.history_v.append(v_window[:-1])
             self.history_t.append(window_t[:-1])
 
+            # Record state and check for attractors
+            if self.attractor is None:
+                self.attractor = self.cbn.record_state(self.x)
+                if self.attractor:
+                    print(f"Attractor detected at window {k}!")
+
             # Store CURRENT x (x_k) for this window
             window_x = np.tile(self.x, (steps_per_window, 1, 1))
             self.history_x.append(window_x)
 
             # 2. Projection Operator (Phi_delta_t)
-            # y_b(k) = 1 if unit b fired in window k
             y = np.array([self.phi.detect_spike(v_window[:, b]) for b in range(self.m)])
 
-            # 3. Discrete Layer (CBN): Spatial Summation
-            new_x = np.zeros((self.m, self.n), dtype=int)
-            for a in range(self.m):
-                incoming_signals = y[self.A[a] != 0]
-                spatial_sum = np.sum(incoming_signals)
+            # 3. Discrete Layer (CBN): Spatial Summation (via CBNController)
+            new_x = self.cbn.compute_next_state(y, self.ref_counters)
 
-                if spatial_sum >= self.K[a] and self.ref_counters[a] == 0:
-                    new_x[a, :] = 1
+            # Update refractory counters
+            for a in range(self.m):
+                if new_x[a, 0] == 1:
                     self.ref_counters[a] = self.ref_duration
-                else:
-                    new_x[a, :] = 0
-                    if self.ref_counters[a] > 0:
-                        self.ref_counters[a] -= 1
+                elif self.ref_counters[a] > 0:
+                    self.ref_counters[a] -= 1
 
             self.x = new_x
             t += self.delta_t
