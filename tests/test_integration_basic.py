@@ -3,7 +3,7 @@ import numpy as np
 import sys
 import os
 
-sys.path.append(os.path.join(os.getcwd(), 'src'))
+sys.path.append(os.path.join(os.getcwd(), 'core'))
 from dynamics.simulator import HybridSimulator
 
 class TestSimulatorV2(unittest.TestCase):

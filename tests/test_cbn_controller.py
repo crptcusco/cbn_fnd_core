@@ -3,7 +3,7 @@ import numpy as np
 import sys
 import os
 
-sys.path.append(os.path.join(os.getcwd(), 'src'))
+sys.path.append(os.path.join(os.getcwd(), 'core'))
 from dynamics.cbn_controller import CBNController
 
 class TestCBNController(unittest.TestCase):

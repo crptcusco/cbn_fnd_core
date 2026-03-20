@@ -3,8 +3,8 @@ import numpy as np
 import sys
 import os
 
-# Add src to path
-sys.path.append(os.path.join(os.getcwd(), 'src'))
+# Add core to path
+sys.path.append(os.path.join(os.getcwd(), 'core'))
 
 from dynamics.fhn_integrator import FHNIntegrator
 from dynamics.phi_mapping import PhiMapping

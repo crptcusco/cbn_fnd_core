@@ -7,12 +7,12 @@ import sys
 # Identify the project root by going up one level from 'experiments/'
 script_dir = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.dirname(script_dir)
-src_path = os.path.join(project_root, 'src')
+core_path = os.path.join(project_root, 'core')
 results_dir = os.path.join(project_root, 'results')
 
-# Add 'src' to the system path to allow importing the 'dynamics' package
-if src_path not in sys.path:
-    sys.path.append(src_path)
+# Add 'core' to the system path to allow importing the 'dynamics' package
+if core_path not in sys.path:
+    sys.path.append(core_path)
 
 from dynamics.simulator import HybridSimulator
 

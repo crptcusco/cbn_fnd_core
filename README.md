@@ -24,9 +24,9 @@ This repository is a specialized framework for studying hybrid dynamics, bridgin
    ```
 2. Run the Diamond Case simulation:
    ```bash
-   PYTHONPATH=src python src/diamond_case.py
+   PYTHONPATH=core python core/diamond_case.py
    ```
-3. Check the results in `diamond_case_v2.png`.
+3. Check the results in `results/diamond_case_v2.png`.
 
 ## Core Logic
 

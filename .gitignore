@@ -8,6 +8,10 @@ venv/
 *.jpeg
 *.pdf
 
+# Permitir PNG generados en results y seguir ignorando otros
+!results/
+!results/**/*.png
+
 # Dropbox extended attributes/metafiles
 *\:com.dropbox.attrs
 *.dropbox*
